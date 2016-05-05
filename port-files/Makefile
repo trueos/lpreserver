@@ -15,7 +15,6 @@ RUN_DEPENDS=	${LOCALBASE}/share/pcbsd/scripts/functions.sh:sysutils/pcbsd-libsh 
 		sshpass:security/sshpass \
 		stunnel:security/stunnel
 
-WRKSRC_SUBDIR=	src-sh/lpreserver
 USES=		pkgconfig tar:xz
 NO_BUILD=	yes
 MAKE_ARGS=	PREFIX=${STAGEDIR}${PREFIX}
