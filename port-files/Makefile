@@ -11,7 +11,7 @@ COMMENT=	PC-BSD Life Preserver Utility
 
 LICENSE=	BSD3CLAUSE
 
-RUN_DEPENDS=	${LOCALBASE}/share/pcbsd/scripts/functions.sh:sysutils/pcbsd-libsh \
+RUN_DEPENDS=	${LOCALBASE}/share/pcbsd/scripts/functions.sh:sysutils/trueos-libsh \
 		sshpass:security/sshpass \
 		stunnel:security/stunnel
 
@@ -20,7 +20,7 @@ NO_BUILD=	yes
 MAKE_ARGS=	PREFIX=${STAGEDIR}${PREFIX}
 
 USE_GITHUB=	yes
-GH_ACCOUNT=	pcbsd
+GH_ACCOUNT=	trueos
 GH_PROJECT=	lpreserver
 GH_TAGNAME=	%%GHTAG%%
 
