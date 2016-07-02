@@ -41,7 +41,7 @@ ghtag=`git log -n 1 . | grep '^commit ' | awk '{print $2}'`
 if [ -e "version" ] ; then
   verTag=$(cat version)
 else
-  verTag=$(date '+%Y%m%d')
+  verTag=$(date '+%Y%m%d%H%M')
 fi
 
 # Set the port
