@@ -5,7 +5,7 @@
 # Modified 7/14/2015 
 
 # Source external functions
-. /usr/local/share/pcbsd/scripts/functions.sh
+. /usr/local/share/trueos/scripts/functions.sh
 
 PATH="${PATH}:/usr/local/bin:/usr/local/sbin"
 export PATH

@@ -6,7 +6,7 @@
 PROGDIR="/usr/local/share/lpreserver"
 
 # Source our functions
-. /usr/local/share/pcbsd/scripts/functions.sh
+. /usr/local/share/trueos/scripts/functions.sh
 . ${PROGDIR}/backend/functions.sh
 
 # Check if we need to prune log file

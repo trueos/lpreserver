@@ -22,7 +22,7 @@ SETTINGS="${HOSTDIR}/settings.conf"
 # Source our functions
 . ${PROGDIR}/conf/life-preserver.conf
 . ${PROGDIR}/scripts/functions.sh
-. /usr/local/share/pcbsd/scripts/functions.sh
+. /usr/local/share/trueos/scripts/functions.sh
 
 prepZFS() {
   isDirZFS "${1}" "1"
