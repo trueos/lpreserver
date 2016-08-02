@@ -182,9 +182,10 @@ enable_cron_scrub()
    # Make sure we remove any old entries for this dataset
    cat /etc/crontab | grep -v "$cronscript $1" > /etc/crontab.new
    mv /etc/crontab.new /etc/crontab
-   
-   cat /usr/local/etc/anacrontab | grep -v "$cronscript $1" > /usr/local/etc/anacrontab.new
-   mv /usr/local/etc/anacrontab.new /usr/local/etc/anacrontab
+   if [ -e /usr/local/etc/anacrontab ] ; then
+     cat /usr/local/etc/anacrontab | grep -v "$cronscript $1" > /usr/local/etc/anacrontab.new
+     mv /usr/local/etc/anacrontab.new /usr/local/etc/anacrontab
+   fi
    
    if [ "$2" = "OFF" ] ; then
       return 
@@ -258,16 +259,18 @@ do
    echo ""
 done
 
-for i in `grep "${PROGDIR}/backend/runscrub.sh" /usr/local/etc/anacrontab | awk '{print $5}'`
-do
-   if [ -n "$POOL" -a "$POOL" != ${i} ] ; then
-     continue
-   fi
+if [ -e /usr/local/etc/anacrontab ] ; then
+  for i in `grep "${PROGDIR}/backend/runscrub.sh" /usr/local/etc/anacrontab | awk '{print $5}'`
+  do
+     if [ -n "$POOL" -a "$POOL" != ${i} ] ; then
+       continue
+     fi
 
-   time=`grep "${PROGDIR}/backend/runscrub.sh ${i}" /usr/local/etc/anacrontab | awk '{print $1}'`
-   echo "$i - every $time days"
-   echo ""
-done
+     time=`grep "${PROGDIR}/backend/runscrub.sh ${i}" /usr/local/etc/anacrontab | awk '{print $1}'`
+     echo "$i - every $time days"
+     echo ""
+  done
+fi
 
 }
 
