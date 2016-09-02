@@ -105,12 +105,13 @@ add options:
 	add iscsi <*.lpiscsi file> <hostdataset> <time> [password file]
 
 	<time> = XX/sync/hour/30min/10min/manual
-	    XX= Time to perform replication (in 24 notation)
-	  sync= Do replication with snaps (Not recommended for frequent snaps)
-	  hour= Replicate hourly
-	 30min= Replicate every 30 minutes
-	 10min= Replicate every 10 minutes
-	manual= Only replicate when requested by user
+ 	     XX= Time to perform replication (in 24 notation)
+ 	   sync= Do replication with snaps (Not recommended for frequent snaps)
+ 	   hour= Replicate hourly
+ 	  30min= Replicate every 30 minutes
+ 	  10min= Replicate every 10 minutes
+alternating= Replicate once every 48 hours (Using even/odd day of month)
+     manual= Only replicate when requested by user
 
 	Example 1: 
 
