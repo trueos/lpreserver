@@ -1986,13 +1986,15 @@ export_iscsi_zpool() {
 }
 
 save_iscsi_zpool_data() {
-  LDATA="$1"
-  if [ -z "$1" -o -z "$2" ] ; then
+
+  OPENSSL="$1"
+  LDATA="$2"
+  if [ -z "$2" -o -z "$3" ] ; then
      exit_err "Usage: lpreserver replicate saveiscsi <zpool> <target host> [password file]"
   fi
-  PASSFILE="$3"
+  PASSFILE="$4"
 
-  repLine=`cat ${REPCONF} | grep "^${LDATA}:.*:${2}:"`
+  repLine=`cat ${REPCONF} | grep "^${LDATA}:.*:${3}:"`
   if [ -z "$repLine" ] ; then
      exit_err "No such replication task: ${LDATA}"
   fi
@@ -2020,7 +2022,7 @@ save_iscsi_zpool_data() {
 
   truncate -s 5M ${LPFILE}
   MD=`mdconfig -t vnode -f ${LPFILE}`
-  if [ "$OPENSSL" = "openssl" ]
+  if [ "$OPENSSL" = "openssl" ]; then
     # Generate and store random password as per Nick
     echo "Generating random password..."
     PASSWORD=`openssl rand -base64 64`
@@ -2209,7 +2211,7 @@ save_iscsi_zpool_data() {
     echo ""
     echo "!! -- PLEASE KEEP THIS IN A SAFE LOCATION -- !!"
     echo ""
-    echo "If you lose the private key for this keypair you will be
+    echo "If you lose the private key for this keypair you will be"
     echo "unable to restore your data!"
   else
 
