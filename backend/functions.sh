@@ -1986,10 +1986,9 @@ export_iscsi_zpool() {
 }
 
 save_iscsi_zpool_data() {
-
   OPENSSL="$1"
   LDATA="$2"
-  if [ -z "$2" -o -z "$3" ] ; then
+  if [ -z "$3" -o -z "$4" ] ; then
      exit_err "Usage: lpreserver replicate saveiscsi <zpool> <target host> [password file]"
   fi
   PASSFILE="$4"
@@ -2183,13 +2182,13 @@ save_iscsi_zpool_data() {
 
   if [ "$OPENSSL" = "openssl" ]; then
     tempfoo=`basename $0`
-    TMPFILE=`mktemp -q /tmp/${tempfoo}.XXXXXX`
+    TEMPFILE=`mktemp -q /tmp/${tempfoo}.XXXXXX`
 
     if [ $? -ne 0 ]; then
       exit_err "Failed creating temp file"
     fi
 
-    TMPTAR=`mktemp -q /tmp/${tempfoo}.XXXXXX.tar`
+    TMPTAR=`mktemp -q /tmp/${tempfoo}.XXXXXX`
     if [ $? -ne 0 ]; then
       exit_err "Failed creating temp file"
     fi
@@ -2199,14 +2198,14 @@ save_iscsi_zpool_data() {
     mkdir -p /var/db/lpreserver/backupkeys
     file="/var/db/lpreserver/backupkeys/${SANELDATA}-${REPHOST}.ssl"
 
-    openssl smime -encrypt -aes256 -in $TMPTAR -out $file ${PASSFILE}
-    rm -f $TMPTAR $TMPFILE
+    openssl smime -encrypt -aes256 -in $TMPTAR -binary -out $file ${PASSFILE}
+
+    rm -f $TMPTAR $TEMPFILE
 
     if [ $? -ne 0 ]; then
       exit_err "Failed encrypting tar"
     fi
 
-    rm $TMPFILE
     echo "SMIME encrypted iSCSI config and GELI key saved to: $file"
     echo ""
     echo "!! -- PLEASE KEEP THIS IN A SAFE LOCATION -- !!"
