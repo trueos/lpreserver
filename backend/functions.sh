@@ -2194,7 +2194,7 @@ save_iscsi_zpool_data() {
     fi
 
     echo "$PASSWORD" > $TEMPFILE
-    tar cf $TMPTAR $TMPFILE $LPFILE
+    tar cf $TMPTAR $TEMPFILE $LPFILE
     mkdir -p /var/db/lpreserver/backupkeys
     file="/var/db/lpreserver/backupkeys/${SANELDATA}-${REPHOST}.ssl"
 
