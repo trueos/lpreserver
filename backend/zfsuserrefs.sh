@@ -55,7 +55,7 @@ countZFSUserRefs()
       continue
     fi
 
-    item_count=$(zfs list -Hp -d 1 -t snapshot -o userrefs ${ZNAME}@${2})
+    item_count=$(zfs list -Hp -d 1 -t snapshot -o userrefs ${ZNAME}@${2} 2>/dev/null || echo 0)
     if [ $? -eq 0 -a "x$item_count" != "x" ]; then
       CNT=$(($CNT + $item_count))
     fi
