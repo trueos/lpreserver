@@ -139,6 +139,26 @@ listZFSSnap() {
 rmZFSSnap() {
   `zfs list -d 1 -t snapshot $1 | grep -q "^$1@$2 "` || return 1
 
+  userrefs=$(${PROGDIR}/backend/zfsuserrefs.sh ${1} ${2} 2>${CMDLOG})
+  if [ $? -ne 0 ] ; then
+    echo_log "ERROR: Error reading the userrefs property of ${1}@${2}"
+    queue_msg "ERROR: Error reading the userrefs property of ${1}@${2}"
+    return 1
+  fi
+  if [ "x${userrefs}" = "x" ] ; then
+    echo_log "ERROR: The userrefs variable is empty, when reading ${1}@${2}"
+    queue_msg "ERROR: The userrefs variable is empty, when reading ${1}@${2}"
+    return 1
+  fi
+
+  if [ ${userrefs} -gt 0 ] ; then
+    echo_log "WARNING: Skipping ${1}@${2} because userrefs (${userrefs}) is greater than 0."
+    queue_msg "WARNING: Skipping ${1}@${2} because userrefs (${userrefs}) is greater than 0."
+    return 0
+  fi
+
+  echo_log "Destroying snapshot ${2} on ${1}, with ${userrefs} refs"
+
   zfs destroy -R ${1}@${2} >${CMDLOG} 2>${CMDLOG}
   return $?
 }
