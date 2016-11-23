@@ -12,8 +12,7 @@ COMMENT=	PC-BSD Life Preserver Utility
 LICENSE=	BSD3CLAUSE
 
 RUN_DEPENDS=	${LOCALBASE}/share/trueos/scripts/functions.sh:sysutils/trueos-libsh \
-		sshpass:security/sshpass \
-		stunnel:security/stunnel
+		sshpass:security/sshpass
 
 USES=		pkgconfig tar:xz
 NO_BUILD=	yes
