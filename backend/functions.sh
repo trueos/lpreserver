@@ -2202,7 +2202,7 @@ save_iscsi_zpool_data() {
 
   if [ "$OPENSSL" = "openssl" ]; then
     tempfoo=`basename $0`
-    TMPFILE=`mktemp -q /tmp/${tempfoo}.XXXXXX`
+    TEMPFILE=`mktemp -q /tmp/${tempfoo}.XXXXXX`
 
     if [ $? -ne 0 ]; then
       exit_err "Failed creating temp file"
@@ -2213,14 +2213,14 @@ save_iscsi_zpool_data() {
       exit_err "Failed creating temp file"
     fi
 
-    echo "$PASSWORD" > $TMPFILE
-    tar cf $TMPTAR $TMPFILE $LPFILE
+    echo "$PASSWORD" > $TEMPFILE
+    tar cf $TMPTAR $TEMPFILE $LPFILE
     mkdir -p /var/db/lpreserver/backupkeys
     file="/var/db/lpreserver/backupkeys/${SANELDATA}-${REPHOST}.ssl"
 
     openssl smime -encrypt -aes256 -in $TMPTAR -binary -out $file ${PASSFILE}
 
-    rm -f $TMPTAR $TMPFILE
+    rm -f $TMPTAR $TEMPFILE
 
     if [ $? -ne 0 ]; then
       exit_err "Failed encrypting tar"
