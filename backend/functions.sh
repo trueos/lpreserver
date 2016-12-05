@@ -2046,7 +2046,7 @@ save_iscsi_zpool_data() {
   if [ "$OPENSSL" = "openssl" ]; then
     # Generate and store random password as per Nick
     echo "Generating random password..."
-    PASSWORD=`openssl rand -base64 64`
+    PASSWORD=`openssl rand -base64 64 | head -c 64`
     echo "Creating GELI provider..."
     echo "$PASSWORD" | geli init -J - ${MD} >/dev/null 2>/dev/null
     if [ $? -ne 0 ] ; then
