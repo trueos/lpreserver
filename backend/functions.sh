@@ -2008,13 +2008,14 @@ export_iscsi_zpool() {
 }
 
 save_iscsi_zpool_data() {
-  LDATA="$1"
-  if [ -z "$1" -o -z "$2" ] ; then
+  OPENSSL="$1"
+  LDATA="$2"
+  if [ -z "$3" -o -z "$4" ] ; then
      exit_err "Usage: lpreserver replicate saveiscsi <zpool> <target host> [password file]"
   fi
-  PASSFILE="$3"
+  PASSFILE="$4"
 
-  repLine=`cat ${REPCONF} | grep "^${LDATA}:.*:${2}:"`
+  repLine=`cat ${REPCONF} | grep "^${LDATA}:.*:${3}:"`
   if [ -z "$repLine" ] ; then
      exit_err "No such replication task: ${LDATA}"
   fi
@@ -2042,7 +2043,24 @@ save_iscsi_zpool_data() {
 
   truncate -s 5M ${LPFILE}
   MD=`mdconfig -t vnode -f ${LPFILE}`
-  if [ -n "$PASSFILE" ] ; then
+  if [ "$OPENSSL" = "openssl" ]; then
+    # Generate and store random password as per Nick
+    echo "Generating random password..."
+    PASSWORD=`openssl rand -base64 64 | head -c 64`
+    echo "Creating GELI provider..."
+    echo "$PASSWORD" | geli init -J - ${MD} >/dev/null 2>/dev/null
+    if [ $? -ne 0 ] ; then
+       mdconfig -d -u $MD
+       rm ${LPFILE}
+       exit_err "Failed GELI init"
+    fi
+    echo "$PASSWORD" | geli attach -j - ${MD} >/dev/null 2>/dev/null
+    if [ $? -ne 0 ] ; then
+       mdconfig -d -u $MD
+       rm ${LPFILE}
+       exit_err "Failed GELI attach"
+    fi
+  elif [ -n "$PASSFILE" ] ; then
     echo "Creating GELI provider..."
     cat ${PASSFILE} | geli init -J - ${MD} >/dev/null 2>/dev/null
     if [ $? -ne 0 ] ; then
@@ -2184,12 +2202,47 @@ save_iscsi_zpool_data() {
   geli stop /dev/${MD}.eli
   mdconfig -d -u ${MD}
 
-  echo "iSCSI config and GELI key saved to: $LPFILE"
-  echo ""
-  echo "!! -- PLEASE KEEP THIS IN A SAFE LOCATION -- !!"
-  echo ""
-  echo "If you lose the password of this file you will be unable"
-  echo "to restore your data!"
+  if [ "$OPENSSL" = "openssl" ]; then
+    tempfoo=`basename $0`
+    TEMPFILE=`mktemp -q /tmp/${tempfoo}.XXXXXX`
+
+    if [ $? -ne 0 ]; then
+      exit_err "Failed creating temp file"
+    fi
+
+    TMPTAR=`mktemp -q /tmp/${tempfoo}.XXXXXX`
+    if [ $? -ne 0 ]; then
+      exit_err "Failed creating temp file"
+    fi
+
+    echo "$PASSWORD" > $TEMPFILE
+    tar cf $TMPTAR $TEMPFILE $LPFILE
+    mkdir -p /var/db/lpreserver/backupkeys
+    file="/var/db/lpreserver/backupkeys/${SANELDATA}-${REPHOST}.ssl"
+
+    openssl smime -encrypt -aes256 -in $TMPTAR -binary -out $file ${PASSFILE}
+
+    rm -f $TMPTAR $TEMPFILE
+
+    if [ $? -ne 0 ]; then
+      exit_err "Failed encrypting tar"
+    fi
+
+    echo "SMIME encrypted iSCSI config and GELI key saved to: $file"
+    echo ""
+    echo "!! -- PLEASE KEEP THIS IN A SAFE LOCATION -- !!"
+    echo ""
+    echo "If you lose the private key for this keypair you will be"
+    echo "unable to restore your data!"
+  else
+
+    echo "iSCSI config and GELI key saved to: $LPFILE"
+    echo ""
+    echo "!! -- PLEASE KEEP THIS IN A SAFE LOCATION -- !!"
+    echo ""
+    echo "If you lose the password of this file you will be unable"
+    echo "to restore your data!"
+  fi
 
   exit 0
 }

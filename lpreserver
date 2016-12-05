@@ -176,6 +176,7 @@ run options:
 saveiscsi options:
 
 	saveiscsi <localdataset/zpool> <target host> [password file]
+	saveiscsi geli <localdataset/zpool> <target host> [password file]
 
 	Creates a GELI encrypted file, which contains all the iSCSI connection
 	information and GELI key for the replication target. Will prompt for
@@ -183,6 +184,12 @@ saveiscsi options:
 
 	This file can then be used with the "replicate add" command to import
 	the backup zpool on another system or from the PC-BSD install media.
+
+    saveiscsi openssl <localdataset/zpool> <target host> <key>
+
+    Generates a random password for the GELI encrypted file described above and
+    then saves the password file and the GELI encrypted file in a tar which is
+    encrypted to an SMIME public key using OpenSSL
 
 exclude options:
 
@@ -770,7 +777,16 @@ case "$1" in
 	  	      ${PROGDIR}/backend/runrep.sh "$2" "$3"
 		      exit $?
 		      ;;
-		saveiscsi) require_root ; save_iscsi_zpool_data "$2" "$3" "$4" ;;
+           saveiscsi)
+                      if [ "$2" = "openssl" ] ; then
+                  	require_root ; save_iscsi_zpool_data "openssl" "$3" "$4" "$5"
+                      elif [ "$2" = "geli" ] ; then
+                        require_root ; save_iscsi_zpool_data "geli" "$3" "$4" "$5"
+                      else
+                        require_root ; save_iscsi_zpool_data "geli" "$2" "$3" "$4"
+                      fi
+                      ;;
+
              exclude) require_root ;
 		      DATASET="${2}"
                       if ! isZFSvalid "$DATASET"; then
