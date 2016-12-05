@@ -777,7 +777,16 @@ case "$1" in
 	  	      ${PROGDIR}/backend/runrep.sh "$2" "$3"
 		      exit $?
 		      ;;
-           saveiscsi) require_root ; save_iscsi_zpool_data "$2" "$3" "$4" "$5" ;;
+           saveiscsi)
+                      if [ "$2" = "openssl" ] ; then
+                  	require_root ; save_iscsi_zpool_data "openssl" "$3" "$4" "$5"
+                      elif [ "$2" = "geli" ] ; then
+                        require_root ; save_iscsi_zpool_data "geli" "$3" "$4" "$5"
+                      else
+                        require_root ; save_iscsi_zpool_data "geli" "$2" "$3" "$4"
+                      fi
+                      ;;
+
              exclude) require_root ;
 		      DATASET="${2}"
                       if ! isZFSvalid "$DATASET"; then
