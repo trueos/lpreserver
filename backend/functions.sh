@@ -38,8 +38,8 @@ export DBDIR LOGDIR PROGDIR CMDLOG REPCONF REPLOGSEND REPLOGRECV MSGQUEUE SSHPRO
 # Create the logdir
 if [ ! -d "$LOGDIR" ] ; then
    mkdir -p ${LOGDIR}
-   chown -R root:root ${LOGDIR}
-   chmod 600 ${LOGDIR}
+   chown -R root ${LOGDIR}
+   chmod 700 ${LOGDIR}
 fi
 
 uname -r | grep -q 10.0
