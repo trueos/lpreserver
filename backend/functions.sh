@@ -2,7 +2,7 @@
 # Functions / variables for lpreserver
 ######################################################################
 # DO NOT EDIT
-# Modified 7/14/2015 
+# Modified 7/14/2015
 
 # Source external functions
 . /usr/local/share/trueos/scripts/functions.sh
@@ -13,7 +13,7 @@ export PATH
 # Installation directory
 PROGDIR="/usr/local/share/lpreserver"
 
-# Location of settings 
+# Location of settings
 DBDIR="/var/db/lpreserver"
 DBDIREXCLUDES="/var/db/lpreserver/excludes"
 DBDIRKEYS="/var/db/lpreserver/keys"
@@ -36,7 +36,7 @@ MSGQUEUE="${DBDIR}/.lpreserver.msg.$$"
 SSHPROPS="-o StrictHostKeyChecking=no"
 export DBDIR LOGDIR PROGDIR CMDLOG REPCONF REPLOGSEND REPLOGRECV MSGQUEUE SSHPROPS
 # Create the logdir
-if [ ! -d "$LOGDIR" ] ; then 
+if [ ! -d "$LOGDIR" ] ; then
    mkdir -p ${LOGDIR}
 fi
 
@@ -180,7 +180,7 @@ enable_cron_snap()
    cat /etc/crontab | grep -v " $cronscript $1" > /etc/crontab.new
    mv /etc/crontab.new /etc/crontab
    if [ "$2" = "OFF" ] ; then
-      return 
+      return
    fi
 
    case $2 in
@@ -190,7 +190,7 @@ enable_cron_snap()
        10min) cLine="*/10    *       *       *       *" ;;
    5min|auto) cLine="*/5     *       *       *       *" ;;
            *) exit_err "Invalid time specified" ;;
-   esac 
+   esac
 
    echo -e "$cLine\troot    ${cronscript} $1 $3" >> /etc/crontab
 }
@@ -206,9 +206,9 @@ enable_cron_scrub()
      cat /usr/local/etc/anacrontab | grep -v "$cronscript $1" > /usr/local/etc/anacrontab.new
      mv /usr/local/etc/anacrontab.new /usr/local/etc/anacrontab
    fi
-   
+
    if [ "$2" = "OFF" ] ; then
-      return 
+      return
    fi
 
    case $2 in
@@ -217,7 +217,7 @@ enable_cron_scrub()
        monthly) cLine="0       $4      $3       *       *" ;;
        anacron) cLine="$3\t60\tautoscrub";;
            *) exit_err "Invalid time specified" ;;
-   esac 
+   esac
 
    if [ "$2" = "anacron" ]; then
       echo -e "$cLine\t${cronscript} $1" >> /usr/local/etc/anacrontab
@@ -273,7 +273,7 @@ do
       time="weekly @ $day_week @ $hour"
    fi
    if [ "$day_month" != '*' ] ; then
-      time="monthly @ $day_month @ $hour"               
+      time="monthly @ $day_month @ $hour"
    fi
    echo "$i - $time"
    echo ""
@@ -314,7 +314,7 @@ snaplist() {
 }
 
 echo_log() {
-   echo "`date`: $@" >> ${LOGDIR}/lpreserver.log 
+   echo "`date`: $@" >> ${LOGDIR}/lpreserver.log
 }
 
 # E-Mail a message to the set addresses
@@ -454,7 +454,7 @@ add_rep_iscsi_task() {
   GELIKEY="$4"
 
   case $TIME in
-     0|[1-9]|1[0-9]|2[0-3]|sync|hour|30min|10min|manual) ;;
+     0|[1-9]|1[0-9]|2[0-3]|sync|hour|30min|10min|alternating|manual) ;;
      *) exit_err "Invalid time: $TIME"
   esac
 
@@ -512,7 +512,7 @@ add_rep_iscsi_task() {
 finish_add_iscsi_target()
 {
 
-  if [ "$TIME" != "sync" -a "$TIME" != "manual" ] ; then
+  if [ "$TIME" != "sync" -a "$TIME" != "manual" -a "$TIME" != "alternating" ] ; then
     case $TIME in
         hour) cTime="0     *" ;;
        30min) cTime="*/30     *" ;;
@@ -521,6 +521,35 @@ finish_add_iscsi_target()
     esac
     cronscript="${PROGDIR}/backend/runrep.sh"
     cLine="$cTime       *       *       *"
+    echo -e "$cLine\troot    ${cronscript} ${LDATA} ${HOST}" >> /etc/crontab
+  elif [ "$TIME" == "alternating" ] ; then
+    # Since there is not option in cron for every-other-day the two options seem
+    # to be even vs odd days of the week or even vs odd days of the month. Both
+    # ways of splitting days end up with odd day jobs happening twice in a row
+    # and even day jobs missing two days in a row (eg Saturday/Sunday or 31st/1st).
+    # Since using days of the month only creates 5 such occurrences per year (or 6
+    # on a leap year) and using days of the week creates 52 such occurrences days
+    # of the month may be a better choice.
+
+    # get random variables for time
+    # backup can start anywhere in a 4 hour window from midnight to 3:59am
+    a="1-31/2"
+    b="2-30/2"
+    hour=$(echo "$(od -An -N1 -i /dev/random) % 4"|bc)
+    minute=$(echo "$(od -An -N1 -i /dev/random) % 60"|bc)
+    if echo "$(od -An -N1 -i /dev/random) % 2" |bc|grep -q 1; then
+      slot=$a
+      other=$b
+    else
+      slot=$b
+      other=$a
+    fi
+     cronscript="${PROGDIR}/backend/runrep.sh"
+    #check if one day is already in use if so use other
+    if grep -q "${slot}.*${cronscript}.*${LDATA}" /etc/crontab ; then
+      slot=$other
+    fi
+    cLine="$minute       $hour       $slot       *       *"
     echo -e "$cLine\troot    ${cronscript} ${LDATA} ${HOST}" >> /etc/crontab
   fi
 
@@ -558,14 +587,14 @@ add_rep_task() {
      0|[1-9]|1[0-9]|2[0-3]|sync|hour|30min|10min|manual) ;;
      *) exit_err "Invalid time: $TIME"
   esac
- 
+
   echo "Adding replication task for local dataset $LDATA"
   echo "----------------------------------------------------------"
-  echo "   Remote Host: $HOST" 
-  echo "   Remote User: $USER" 
-  echo "   Remote Port: $PORT" 
-  echo "Remote Dataset: $RDATA" 
-  echo "          Time: $TIME" 
+  echo "   Remote Host: $HOST"
+  echo "   Remote User: $USER"
+  echo "   Remote Port: $PORT"
+  echo "Remote Dataset: $RDATA"
+  echo "          Time: $TIME"
   echo "----------------------------------------------------------"
   echo "Don't forget to ensure that this user / dataset exists on the remote host"
   echo "with the correct permissions!"
@@ -751,7 +780,7 @@ connect = $REPHOST:$REPPORT" > ${STCFG}
      # Connect the iSCSI session
      echo "iscsictl -A -p 127.0.0.1 -t ${REPINAME}:$REPTARGET -u $REPUSER -s $REPPASS" >${ISCSILOG}
      iscsictl -A -p 127.0.0.1 -t ${REPINAME}:$REPTARGET -u $REPUSER -s $REPPASS >>${ISCSILOG} 2>>${ISCSILOG}
-     if [ $? -ne 0 ] ; then 
+     if [ $? -ne 0 ] ; then
         return 1
      fi
   fi
@@ -806,7 +835,7 @@ connect_geli_zpool()
     if [ $? -ne 0 ] ; then return 1; fi
     if [ ! -e "/dev/${diskPart}" ] ; then
       gpart add -t freebsd-zfs $diskName >>$CMDLOG 2>>${CMDLOG}
-      if [ $? -ne 0 ] ; then 
+      if [ $? -ne 0 ] ; then
       return 1
       fi
     fi
@@ -1012,7 +1041,7 @@ add_exclude()
   excldsetsrec=$(sort -u "${NEWEXCLSREC}")
   excldsets=$(sort -u "${NEWEXCLS}")
 
-  if [ -n "${excldsets}" ]; then 
+  if [ -n "${excldsets}" ]; then
     echo "The following datasets will be excluded:"
     echo "${excldsets}"
     echo ""
@@ -1073,7 +1102,7 @@ remove_exclude()
   # Traverse all excludes and remove them from exlude file
   for exclude in "${@}"; do
     cat "${EXCLFILE}" | grep -v "^${exclude}$" > "${TMPEXCLFILE}"
-    mv "${TMPEXCLFILE}" "${EXCLFILE}" 
+    mv "${TMPEXCLFILE}" "${EXCLFILE}"
   done
 
   return 0
@@ -1267,7 +1296,7 @@ prune_old_remote_snaps() {
   do
     grep -q "^${rsnap}\$" ${lSnaps}
     if [ $? -eq 0 ]; then continue; fi
-    
+
     queue_msg "`date`: Removing old snapshot ${2}@${rsnap}"
     ${CMDPREFIX} zfs destroy -R ${2}@${rsnap}
     if [ $? -ne 0 ] ; then
@@ -1329,7 +1358,7 @@ start_rep_task() {
 
   # Lets get the last snapshot for this dataset
   lastSNAP=`zfs list -t snapshot -d 1 -H ${LDATA} | tail -1 | awk '{$1=$1}1' OFS=" " | cut -d '@' -f 2 | cut -d ' ' -f 1`
- 
+
   if [ "$lastSEND" = "$lastSNAP" ] ; then
      queue_msg "`date`: Last snapshot $lastSNAP is already marked as replicated!"
      echo_log "Finished replication task on ${DATASET} -> ${REPHOST}"
@@ -1794,7 +1823,7 @@ init_rep_task() {
 
   repLine=`cat ${REPCONF} | grep "^${LDATA}:.*:${2}:"`
    if [ -z "$repLine" ] ; then exit_err "No such replication task: ${LDATA}";fi
- 
+
   # We have a replication task for this set, get some vars
   hName=`hostname`
   REPHOST=`echo $repLine | cut -d ':' -f 3`
@@ -1919,7 +1948,7 @@ import_iscsi_zpool() {
   if [ -z "$repLine" ] ; then
      exit_err "No such replication task: ${LDATA}"
   fi
- 
+
   # We have a replication task for this set, get some vars
   hName=`hostname`
   REPHOST=`echo $repLine | cut -d ':' -f 3`
@@ -1954,7 +1983,7 @@ export_iscsi_zpool() {
   if [ -z "$repLine" ] ; then
      exit_err "No such replication task: ${LDATA}"
   fi
- 
+
   # We have a replication task for this set, get some vars
   hName=`hostname`
   REPHOST=`echo $repLine | cut -d ':' -f 3`
@@ -1967,7 +1996,7 @@ export_iscsi_zpool() {
   fi
 
   load_iscsi_rep_data
-  
+
   connect_iscsi
   export startISCSI="1"
   cleanup_iscsi
