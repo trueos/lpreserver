@@ -11,7 +11,7 @@
 # Set a default pager
 PAGER=${PAGER:-more}
 
-require_root() 
+require_root()
 {
   UTEST="`whoami`"
   if [ "$UTEST" != "root" ] ; then
@@ -50,7 +50,7 @@ Type in help <command> for information and usage about that command
   replicate - Manage replication tasks
         set - Set lpreserver options
         get - Get list of lpreserver options
-     status - List datasets, along with last snapshot / replication date 
+     status - List datasets, along with last snapshot / replication date
 __EOF__
 };
 
@@ -63,7 +63,7 @@ Manage Life-Preserver replication tasks
 
 Replication uses ZFS to send your snapshots to a remote system which also has
 a ZFS pool, such as FreeNAS or another PC-BSD system. The <hostdataset> must
-also be scheduled for snapshots for replication to occur. 
+also be scheduled for snapshots for replication to occur.
 
 On the remote system, you will need to have created the <remotedataset>
 beforehand.
@@ -93,34 +93,35 @@ Available subcommands:
       exclude - Exclude datasets from replication
     rmexclude - Remove datasets from exclude list for replication
   listexclude - List excluded datasets from replication
-  pruneremote - Remove remote datasets on target host which no longer exist on local host
+  pruneremote - Remove remote datasets on target host which no longer exist on
+		local host
 
 
 add options:
 
 	add <remotehost> <user> <port> <hostdataset> <remotedataset> <time>
-	
+
 	add iscsi <*.lps file> <hostdataset> <time> [geli key]
 
 	add iscsi <*.lpiscsi file> <hostdataset> <time> [password file]
 
 	<time> = XX/sync/hour/30min/10min/manual
- 	     XX= Time to perform replication (in 24 notation)
- 	   sync= Do replication with snaps (Not recommended for frequent snaps)
- 	   hour= Replicate hourly
- 	  30min= Replicate every 30 minutes
- 	  10min= Replicate every 10 minutes
+	     XX= Time to perform replication (in 24 notation)
+	   sync= Do replication with snaps (Not recommended for frequent snaps)
+	   hour= Replicate hourly
+	  30min= Replicate every 30 minutes
+	  10min= Replicate every 10 minutes
 alternating= Replicate once every 48 hours (Using even/odd day of month)
      manual= Only replicate when requested by user
 
-	Example 1: 
+	Example 1:
 
 	add freenas.8343 backupuser 22 tank1 tankbackup/backups sync
 
 	Will schedule replication of tank1 to tankbackup/backups with
 	each snapshot
 
-	Example 2: 
+	Example 2:
 
 	add freenas.8343 backupuser 22 tank1 tankbackup/backups 22
 
@@ -163,9 +164,9 @@ init options:
 remove options:
 
 	remove <dataset> <target host>
-	
+
 	Remove a replication task indicated by <dataset>
-        Use 'replicate list' for a list of IDs. 
+        Use 'replicate list' for a list of IDs.
 
 run options:
 
@@ -208,8 +209,8 @@ rmexclude options:
 
 	rmexclude <dataset> <excluded dataset> <excluded dataset> ...
 
-	Remove exclude for one or more datasets that was previously excluded from replication.
-	This removes the datasets from the exclude list.
+	Remove exclusion for one or more datasets that was previously excluded
+	from replication.  This removes the datasets from the exclude list.
 
 	Examples:
 
@@ -218,8 +219,8 @@ rmexclude options:
 	Remove excluded dataset tank1/tmp and tank1/var/tmp on dataset tank1
 	for replication.
 
-	Dataset tank1/tmp and tank1/var/tmp on dataset tank1 are no longer excluded 
-	from replication.
+	Dataset tank1/tmp and tank1/var/tmp on dataset tank1 are no longer
+	excluded from replication.
 
 listexclude options:
 
@@ -231,7 +232,8 @@ pruneremote options:
 
 	pruneremote <dataset> <target host>
 
-	Remove remote datasets on target host which no longer exist on local host.
+	Remove remote datasets on target host which no longer exist on local
+	host.
 
 	Examples:
 
@@ -242,7 +244,7 @@ Examples:
 
   # lpreserver replicate run tank1 freenas.example.org
 
-  
+
   # lpreserver replicate init tank1 freenas.example.org
 
 " | $PAGER
@@ -265,25 +267,30 @@ Config options
      duwarn - Set to a disk percentage [0-99] at which to warn of low disk space
 
       email - Set the e-mail address to receive notifications
-		This will require that the \"mail\" command is setup for outgoing mail
+		This will require that the \"mail\" command is setup for
+		outgoing mail
 
-  emailopts - (ALL/WARN/ERROR) 
-	 	  ALL - Send mail for every snapshot, plus warnings and errors
+  emailopts - (ALL/WARN/ERROR)
+		  ALL - Send mail for every snapshot, plus warnings and errors
 		 WARN - Send mail for warnings and errors (Default)
 		ERROR - Send mail for errors only
 
-  recursive - (ON/OFF) 
-		   ON - Will create / destroy snapshots recursively, for all children of
-			a target zpool/dataset. (Default)
-		  OFF - Will only create / destroy snapshots on the specified dataset.  
+  recursive - (ON/OFF)
+		   ON - Will create / destroy snapshots recursively, for all
+			children of a target zpool/dataset. (Default)
+		  OFF - Will only create / destroy snapshots on the specified
+			dataset.
 
 pruneremote - (ON/OFF)
-		   ON - During replication this will prune remote datasets on destination
-		        which are no longer available on the source.
-		  OFF - During replication this will NOT prune remote datasets on destination
-		        which are no longer available on the source. (Default)
+		   ON - During replication this will prune remote datasets on
+			destination which are no longer available on the
+			source.
+		  OFF - During replication this will NOT prune remote datasets
+			on destination which are no longer available on the
+			source. (Default)
 
-			For manual pruning see the 'lpreserver replicate pruneremote' command.
+			For manual pruning see the 'lpreserver replicate
+			pruneremote' command.
 
 Example:
 
@@ -359,8 +366,9 @@ start options:
 	* A hourly snapshot will be kept for a day.
 	* A daily snapshot will be kept for a month.
 	* A Monthly snapshot will be kept for a year.
-	* The life-preserver daemon will also keep track of the zpool disk space,
-	  if the capacity falls below 75%, the oldest snapshot will be auto-pruned.
+	* The life-preserver daemon will also keep track of the zpool disk
+	  space, if the capacity falls below 75%, the oldest snapshot will be
+	  auto-pruned.
 
 	Examples:
 
@@ -390,22 +398,23 @@ exclude options:
 
 	lpreserver cronsnap exclude tank1/usr/home/kris tank1/usr/home/kris/tmp tank1/usr/home/kris/test
 
-	Exclude dataset tank1/usr/home/kris/tmp and tank1/usr/home/kris/test from scheduled snapshots
-	on dataset tank1/usr/home/kris.
+	Exclude dataset tank1/usr/home/kris/tmp and tank1/usr/home/kris/test
+	from scheduled snapshots on dataset tank1/usr/home/kris.
 
 rmexclude options:
 
 	rmexclude <dataset> <excluded dataset> <excluded dataset> ...
 
-	Remove exclude for one or more datasets that was previously excluded from scheduled snapshots.
-	This removes the datasets from the exclude list.
+	Remove exclusion for one or more datasets that was previously excluded
+	from scheduled snapshots.  This removes the datasets from the exclude
+	list.
 
 	Examples:
 
 	lpreserver cronsnap rmexclude tank1/usr/home/kris tank1/usr/home/kris/tmp tank1/usr/home/kris/test
 
-	Dataset tank1/usr/home/kris/tmp and tank1/usr/home/kris/test on dataset tank1/usr/home/kris
-	are no longer excluded for scheduled snapshots.
+	Dataset tank1/usr/home/kris/tmp and tank1/usr/home/kris/test on dataset
+	tank1/usr/home/kris are no longer excluded for scheduled snapshots.
 
 listexclude options:
 
@@ -444,17 +453,19 @@ start options:
 	NOTE:
 	Frequency has two modes, regular cron and anacron.
 	If you specify a number or 'daily', 'weekly' and 'monthly' without
-	the '@' sign you setup anacron. When you specify with the '@' sign you setup cron.
-	If you want to be sure that your scrub is always run use anacron.
+	the '@' sign you setup anacron. When you specify with the '@' sign you
+	setup cron.  If you want to be sure that your scrub is always run use
+	anacron.
 
 	If 'daily' is given you set the period to every day.
 	If 'weekly' is given you set the period to every 7 days.
 	If 'monthly' is given you set the period to every 30 days.
 
 	If 'daily@' is given without hour the default is 22.
-	If 'weekly@' is given without day or hour the default is day 1 and hour 22.
-	(1 = Mon, 7 = Sun)
-	If 'monthly@' is given without day or hour the default is day 1 and hour 22.
+	If 'weekly@' is given without day or hour the default is day 1 and
+		hour 22.  (1 = Mon, 7 = Sun)
+	If 'monthly@' is given without day or hour the default is day 1 and
+		hour 22.
 
 	Examples:
 
@@ -605,7 +616,7 @@ case "$1" in
          esac  ;;
 
     get) require_root
-	 # Display our options	
+	 # Display our options
 	 title
 	 echo "      Recursive mode: $RECURMODE"
 	 echo "   Prune remote mode: $PRUNEREMOTEMODE"
@@ -616,24 +627,24 @@ case "$1" in
          ;;
 
     set) require_root
-	 OPT="${2}" 
+	 OPT="${2}"
 
 	 case $OPT in
         emailopts) case $3 in
-		  ALL|WARN|ERROR) echo "E-Mail mode set to: $3" 
+		  ALL|WARN|ERROR) echo "E-Mail mode set to: $3"
 			          echo "$3" > ${DBDIR}/emaillevel ;;
 		     *) exit_err "Unknown option" ;;
 		   esac
 		   ;;
-            email) echo "Setting email notification to: $3" 
+            email) echo "Setting email notification to: $3"
 	           echo "$3" > ${DBDIR}/emails ;;
            duwarn) if [ ! $(is_num "$3") ] ; then exit_err "Invalid number, must be 0-99"; fi
-		   echo "Setting disk warning capacity to: ${3}%" 
+		   echo "Setting disk warning capacity to: ${3}%"
 	           echo "$3" > ${DBDIR}/duwarn ;;
         recursive) case $3 in
-		  OFF|Off|off)  echo "Recursive mode disabled" 
+		  OFF|Off|off)  echo "Recursive mode disabled"
 			        touch ${DBDIR}/recursive-off ;;
-		     ON|On|on)  echo "Recursive mode enabled" 
+		     ON|On|on)  echo "Recursive mode enabled"
 			        rm ${DBDIR}/recursive-off 2>/dev/null ;;
 		     *) exit_err "Unknown option" ;;
 		   esac
@@ -740,8 +751,8 @@ case "$1" in
          ;;
  replicate) shift
 	    case ${1} in
-		add) require_root ; 
-		     if [ "$2" = "iscsi" ] ; then 
+		add) require_root ;
+		     if [ "$2" = "iscsi" ] ; then
                         if ! isZFSvalid "$4"; then
                           exit_err "${4} is not a valid dataset!"
                         fi
@@ -773,13 +784,13 @@ case "$1" in
                         rem_rep_task "$2" "$3"
                         echo "Removed replication task for dataset $2, target host $3"
                         ;;
-		 run) require_root ; 
-	  	      ${PROGDIR}/backend/runrep.sh "$2" "$3"
+		 run) require_root ;
+		      ${PROGDIR}/backend/runrep.sh "$2" "$3"
 		      exit $?
 		      ;;
            saveiscsi)
                       if [ "$2" = "openssl" ] ; then
-                  	require_root ; save_iscsi_zpool_data "openssl" "$3" "$4" "$5"
+                        require_root ; save_iscsi_zpool_data "openssl" "$3" "$4" "$5"
                       elif [ "$2" = "geli" ] ; then
                         require_root ; save_iscsi_zpool_data "geli" "$3" "$4" "$5"
                       else
@@ -788,7 +799,7 @@ case "$1" in
                       ;;
 
              exclude) require_root ;
-		      DATASET="${2}"
+                      DATASET="${2}"
                       if ! isZFSvalid "$DATASET"; then
                         exit_err "${DATASET} is not a valid dataset!"
                       fi
@@ -797,8 +808,8 @@ case "$1" in
                       add_exclude "${DATASET}" "rep" "${@}"
                      ;;
            rmexclude) require_root ;
-		      DATASET="${2}"
-		      # Shift the arguments so we only have dataset exclude removals left in $@
+                      DATASET="${2}"
+                      # Shift the arguments so we only have dataset exclude removals left in $@
                       shift 2
                       remove_exclude "${DATASET}" "rep" "${@}"
                      ;;
@@ -818,10 +829,10 @@ case "$1" in
                         exit_err "No such replication task for target host $3"
                      fi
                      prune_remote_rep_task "$2" "$3"
-		     ;;
-		*) help_replicate ;;
-	    esac
-	 ;;
+                     ;;
+                *) help_replicate ;;
+            esac
+         ;;
    *) help_main ;;
 esac
 
