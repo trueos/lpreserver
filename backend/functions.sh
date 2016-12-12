@@ -1215,44 +1215,9 @@ build_dset_list()
 }
 
 sort_dset_by_clone() {
-  local PSETS=""
-  local CSETS=""
-  for dset in $DSETS
-  do
-     origin=`zfs list -H -o origin $dset`
-     # If no ORIGIN, we can add it back to the list
-     if [ -z "$origin" -o "$origin" = "-" ] ; then
-        PSETS=" $PSETS $dset "
-        continue
-     fi
-     CSETS=" $CSETS $dset "
-  done
-
-  DSETS="$PSETS"
-  if [ -n "$CSETS" ] ; then
-     add_dset_clone "$CSETS"
-  fi
-}
-
-add_dset_clone() {
-
-  local CSETS=""
-  unset PASSDSETS
-  local PASSDSETS=""
-
-  for dset in ${1}
-  do
-     origin=`zfs list -H -o origin $dset`
-     originraw="`echo $origin | cut -d '@' -f 1`"
-     case "${DSETS}" in
-        *" $originraw "*) DSETS=" $DSETS $dset " ;;
-        *) PASSDSETS=" $PASSDSETS $dset ";;
-     esac
-  done
-  # Be recursive until we add them all
-  if [ -n "$PASSDSETS" ] ; then
-     add_dset_clone "$PASSDSETS"
-  fi
+  # Sort datasets by creation time.  This ensures that parents will come before
+  # children, even for clones.  However, it will fail for promoted clones.
+  DSETS=`zfs list -Hp -o name,creation $DSETS | sort -n -k 2 | cut -w -f 1`
 }
 
 prune_remote_datasets() {
