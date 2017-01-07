@@ -1185,7 +1185,7 @@ build_dset_list()
       DSETS="$DSETS ${i}"
     done
     unset IFS
-    sort_dset_by_clone
+    sort_dset_by_clone $1
     return 0
   else
     # We have excludes, lets prune those
@@ -1209,15 +1209,23 @@ build_dset_list()
 
     # Cleanup and return
     rm /tmp/.dSet.$$
-    sort_dset_by_clone
+    sort_dset_by_clone $1
     return 0
   fi
 }
 
+# Return DSETS sorted so that datasets are always preceded by their parents and
+# (if applicable), origins.
 sort_dset_by_clone() {
-  # Sort datasets by creation time.  This ensures that parents will come before
-  # children, even for clones.  However, it will fail for promoted clones.
-  DSETS=`zfs list -Hp -o name,creation $DSETS | sort -n -k 2 | cut -w -f 1`
+  # Each dataset must be sorted after its parent, and after its origin if it is
+  # a clone.  But there may be a relationship between a dataset's parent and
+  # its origin, so we can't simply put one before the other.  Instead, we'll
+  # build a dependency graph and solve it with make.
+  # @param $1	The base dataset to replicate
+  local basedset="$1"
+  DSETS=`zfs list -Hp -r -o name,name,origin "$basedset" | \
+         awk -v basedset="$basedset" -f ${PROGDIR}/backend/sort_dsets.awk | \
+         make -f - $DSETS`
 }
 
 prune_remote_datasets() {
