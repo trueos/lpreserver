@@ -82,6 +82,12 @@ setOpts() {
     export DUWARN=70
   fi
 
+  if [ -e "${DBDIR}/duprune" ] ; then
+    export DUPRUNE="`cat ${DBDIR}/duprune`"
+  else
+    export DUPRUNE=75
+  fi
+
   case $EMAILMODE in
       ALL|WARN|ERROR) ;;
 	*) export EMAILMODE="WARN";;

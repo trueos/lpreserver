@@ -266,6 +266,9 @@ Config options
 
      duwarn - Set to a disk percentage [0-99] at which to warn of low disk space
 
+    duprune - Set to a disk percentage [0-99] at which to begin removing old
+              snapshots
+
       email - Set the e-mail address to receive notifications
 		This will require that the \"mail\" command is setup for
 		outgoing mail
@@ -618,11 +621,12 @@ case "$1" in
     get) require_root
 	 # Display our options
 	 title
-	 echo "      Recursive mode: $RECURMODE"
-	 echo "   Prune remote mode: $PRUNEREMOTEMODE"
-	 echo "E-mail notifications: $EMAILMODE"
-	 echo "    E-mail addresses: $EMAILADDY"
-	 echo "  Disk space warn at: ${DUWARN}%"
+	 echo "               Recursive mode: $RECURMODE"
+	 echo "            Prune remote mode: $PRUNEREMOTEMODE"
+	 echo "         E-mail notifications: $EMAILMODE"
+	 echo "             E-mail addresses: $EMAILADDY"
+	 echo "           Disk space warn at: ${DUWARN}%"
+	 echo "Disk space prune snapshots at: ${DUPRUNE}%"
 	 exit 0
          ;;
 
@@ -639,8 +643,11 @@ case "$1" in
             email) echo "Setting email notification to: $3"
 	           echo "$3" > ${DBDIR}/emails ;;
            duwarn) if [ ! $(is_num "$3") ] ; then exit_err "Invalid number, must be 0-99"; fi
-		   echo "Setting disk warning capacity to: ${3}%"
+		   echo "Setting disk space warning capacity to: ${3}%"
 	           echo "$3" > ${DBDIR}/duwarn ;;
+          duprune) if [ ! $(is_num "$3") ] ; then exit_err "Invalid number, must be 0-99"; fi
+		   echo "Setting disk space snapshot prune to: ${3}%"
+	           echo "$3" > ${DBDIR}/duprune ;;
         recursive) case $3 in
 		  OFF|Off|off)  echo "Recursive mode disabled"
 			        touch ${DBDIR}/recursive-off ;;
