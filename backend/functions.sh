@@ -82,6 +82,12 @@ setOpts() {
     export DUWARN=70
   fi
 
+  if [ -e "${DBDIR}/duprune" ] ; then
+    export DUPRUNE="`cat ${DBDIR}/duprune`"
+  else
+    export DUPRUNE=75
+  fi
+
   case $EMAILMODE in
       ALL|WARN|ERROR) ;;
 	*) export EMAILMODE="WARN";;
@@ -1876,6 +1882,12 @@ do_pool_cleanup()
      return
   fi
 
+  # Is this zpool replicated
+  if [ -e "$REPCONF" ] ; then
+     repLine=`cat ${REPCONF} | grep "^${1}:"`
+     repHost=`echo $repLine | cut -d ':' -f 3`
+  fi
+
   # Before we start pruning, check if any replication is running
   local pidFile="${DBDIR}/.reptask-`echo ${1} | sed 's|/|-|g'`"
   if [ -e "${pidFile}" ] ; then
@@ -1895,17 +1907,21 @@ do_pool_cleanup()
         continue
      fi
 
-     echo_log "Pruning old snapshot: $snap"
-     rmZFSSnap "${1}" "$snap"
-     if [ $? -ne 0 ] ; then
-       haveMsg=1
-       echo_log "ERROR: (Low Disk Space) Failed pruning snapshot $snap on ${1}"
-       queue_msg "ERROR: (Low Disk Space) Failed pruning snapshot $snap on ${1} @ `date` \n\r`cat $CMDLOG`"
-     else
-       queue_msg "(Low Disk Space) Auto-pruned snapshot: $snap on ${1} @ `date`\n\r`cat $CMDLOG`"
-       haveMsg=1
-     fi
+     # Don't remove snapshots that hasn't been replicated yet
+     repSnap=`zfs get -d 1 lpreserver:${repHost} ${1} | grep LATEST | awk '{$1=$1}1' OFS=" " | tail -1 | cut -d '@' -f 2 | cut -d ' ' -f 1`
 
+     if [ ! "$repSnap" = "$snap" ] ; then
+        echo_log "Pruning old snapshot: $snap"
+        rmZFSSnap "${1}" "$snap"
+        if [ $? -ne 0 ] ; then
+           haveMsg=1
+           echo_log "ERROR: (Low Disk Space) Failed pruning snapshot $snap on ${1}"
+           queue_msg "ERROR: (Low Disk Space) Failed pruning snapshot $snap on ${1} @ `date` \n\r`cat $CMDLOG`"
+        else
+           queue_msg "(Low Disk Space) Auto-pruned snapshot: $snap on ${1} @ `date`\n\r`cat $CMDLOG`"
+           haveMsg=1
+        fi
+     fi
      # We only prune a single snapshot at this time, so lets end
      break
   done
