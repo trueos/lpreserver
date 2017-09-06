@@ -49,8 +49,8 @@ do
      haveMsg=1
   fi
 
-  # See if we can do any auto-cleanup of this pool
-  if [ $poolCap -gt 75 ] ; then
+  # See if we need to do any auto-cleanup of this pool
+  if [ $poolCap -gt $DUPRUNE ] ; then
      do_pool_cleanup "$zpool"
   fi
 
