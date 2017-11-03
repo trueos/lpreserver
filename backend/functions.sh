@@ -1291,7 +1291,7 @@ prune_old_remote_snaps() {
 
 start_rep_task() {
   LDATA="$1"
-  hName=`hostname`
+  hName=`hostname -s`
   zStatus=1
 
   #save_mount_props "${DATASET}"
