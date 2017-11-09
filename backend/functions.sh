@@ -628,20 +628,7 @@ add_rep_task() {
   # Check if we need to setup a SSH key
   if [ -z "$SSHPASS" ] ; then return; fi
 
-  if [ ! -e "/root/.ssh/id_rsa.pub" ]; then
-    mkdir /root/.ssh >/dev/null 2>/dev/null
-    ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa
-  fi
-
-  if [ ! -e "/root/.ssh/id_rsa.pub" ]; then
-    exit_err "Failed creating /root/.ssh/id_rsa.pub"
-  fi
-
-  sshpass -e ssh -p $PORT $USER@$HOST $SSHPROPS 'mkdir .ssh' >/dev/null 2>/dev/null
-  cat /root/.ssh/id_rsa.pub | sshpass -e ssh -p $PORT $USER@$HOST $SSHPROPS 'chmod 700 .ssh ; tee -a .ssh/authorized_keys ; chmod 644 .ssh/authorized_keys' >/dev/null 2>/dev/null
-  if [ $? -ne 0 ] ; then
-     exit_err "Failed setting up SSH key authentication"
-  fi
+  ssh_keyexchange "$HOST" "$USER" "$PORT"
 }
 
 rem_rep_task() {
@@ -2235,4 +2222,36 @@ save_iscsi_zpool_data() {
   fi
 
   exit 0
+}
+
+ssh_keyexchange() {
+
+  if [ -z "$1" -o -z "$2" -o -z "$3" ] ; then
+     exit_err "Usage: lpreserver keyexchange <remote host> <user> <port>"
+  fi
+
+  if [ ! -e "/root/.ssh/id_rsa.pub" ]; then
+    mkdir /root/.ssh >/dev/null 2>/dev/null
+    ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa
+  fi
+
+  if [ ! -e "/root/.ssh/id_rsa.pub" ]; then
+    exit_err "Failed creating /root/.ssh/id_rsa.pub"
+  fi
+
+  if [ -n "$SSHPASS" ] ; then
+    # Using SSHPASS
+    sshpass -e ssh -p $3 $2@$1 'mkdir .ssh' >/dev/null 2>/dev/null
+    cat /root/.ssh/id_rsa.pub | sshpass -e ssh -p $3 $2@$1 'chmod 700 .ssh ; tee -a .ssh/authorized_keys ; chmod 644 .ssh/authorized_keys' >/dev/null 2>/dev/null
+    if [ $? -ne 0 ] ; then
+       exit_err "Failed setting up SSH key authentication"
+    fi
+  else
+    # INTERACTIVE MODE
+    ssh -p $3 $2@$1 'mkdir .ssh' >/dev/null 2>/dev/null
+    cat /root/.ssh/id_rsa.pub | ssh -p $3 $2@$1 'chmod 700 .ssh ; tee -a .ssh/authorized_keys ; chmod 644 .ssh/authorized_keys' >/dev/null 2>/dev/null
+    if [ $? -ne 0 ] ; then
+       exit_err "Failed setting up SSH key authentication"
+    fi
+  fi
 }
