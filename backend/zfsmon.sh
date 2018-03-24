@@ -43,6 +43,11 @@ for zpool in `zpool list -H | awk '{print $1}'`
 do
   poolCap="`zpool list -H -o capacity $zpool | cut -d '%' -f 1`"
 
+  # Skip if pool doesn't have a capacity
+  if [ "$poolCap" = "-" ] ; then
+    continue
+  fi
+
   if [ $poolCap -gt $DUWARN ] ; then
      queue_msg "Warning! ${zpool} is currently at ${poolCap}% capacity!"
      echo "$poolCap" > $DBDIR/zpool-alert-du
